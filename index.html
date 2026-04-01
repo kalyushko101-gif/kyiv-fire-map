@@ -7,18 +7,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
   #map { height: 100vh; }
-  .legend {
-    background: white;
-    padding: 10px;
-    line-height: 18px;
-    color: #333;
-  }
-  .legend span {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    margin-right: 8px;
-  }
+  .legend { background: white; padding: 10px; line-height: 18px; color: #333; }
+  .legend span { display: inline-block; width: 18px; height: 18px; margin-right: 8px; }
 </style>
 </head>
 <body>
@@ -26,10 +16,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 var map = L.map('map').setView([50.45, 30.52], 11);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 18,
-  attribution: '© OpenStreetMap'
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
 
 var districtColors = {
   "ГОЛОСІЇВСЬКИЙ": "#FF5733",
@@ -43,53 +30,42 @@ var districtColors = {
   "ШЕВЧЕНКІВСЬКИЙ": "#A833FF"
 };
 
-function highlightFeature(e) {
-  var layer = e.target;
-  layer.setStyle({weight: 3, color: '#000', fillOpacity: 0.9});
-  layer.bringToFront();
-}
-
-function resetHighlight(e) {
-  geojson.resetStyle(e.target);
-}
-
-function onEachFeature(feature, layer) {
-  layer.on({mouseover: highlightFeature, mouseout: resetHighlight});
-}
+function highlightFeature(e){ var layer=e.target; layer.setStyle({weight:3,color:'#000',fillOpacity:0.9}); layer.bringToFront(); }
+function resetHighlight(e){ geojson.resetStyle(e.target); }
+function onEachFeature(feature,layer){ layer.on({mouseover:highlightFeature,mouseout:resetHighlight}); }
 
 var geojson;
 fetch('https://gisserver-stage.kyivcity.gov.ua/mayno/rest/services/adge/Dilnyci/FeatureServer/2/query?where=1%3D1&outFields=*&outSR=4326&f=geojson')
-  .then(res => res.json())
-  .then(data => {
-    geojson = L.geoJSON(data, {
-      style: function(feature){
-        var name = feature.properties.name_1.toUpperCase();
-        return {color: "#444", weight: 2, fillOpacity: 0.7, fillColor: districtColors[name] || "#BBBBBB"};
-      },
-      onEachFeature: onEachFeature
-    }).addTo(map);
+.then(res=>res.json())
+.then(data=>{
+  geojson=L.geoJSON(data,{
+    style:function(f){
+      var name=f.properties.name_1.toUpperCase();
+      return {color:"#444",weight:2,fillOpacity:0.7,fillColor:districtColors[name]||"#BBBBBB"};
+    },
+    onEachFeature:onEachFeature
+  }).addTo(map);
 
-    fetch("https://script.google.com/a/macros/dsns.gov.ua/s/AKfycbz5LH_7yk6_3a6jNKlzOnAzmX_c61eA_vtHECc9cLiDDMwJ8ySZhPfq9KdUcUkia0SW/exec")
-      .then(res => res.json())
-      .then(fireCounts => {
-        geojson.eachLayer(function(layer){
-          var name = layer.feature.properties.name_1.toLowerCase();
-          var count = fireCounts[name] || 0;
-          layer.bindPopup("<b>" + layer.feature.properties.name_1 + "</b><br>Кількість пожеж: " + count);
-        });
-      })
-      .catch(err => console.error('Помилка підвантаження пожеж:', err));
+  fetch("https://script.google.com/a/macros/dsns.gov.ua/s/AKfycbzsZGrZ9T57tVTiGuCm_tjw2hLz7IMjvWdEreyiJ0f5lF3wIHmLlK7MoWQeV67lJd0F/exec")
+  .then(res=>res.json())
+  .then(fireCounts=>{
+    geojson.eachLayer(function(layer){
+      var name=layer.feature.properties.name_1.toLowerCase();
+      var count=fireCounts[name]||0;
+      layer.bindPopup("<b>"+layer.feature.properties.name_1+"</b><br>Кількість пожеж: "+count);
+    });
+  }).catch(err=>console.error(err));
 
-    var legend = L.control({position: 'bottomright'});
-    legend.onAdd = function () {
-      var div = L.DomUtil.create('div', 'legend');
-      for (var name in districtColors) {
-        div.innerHTML += '<span style="background:' + districtColors[name] + '"></span>' + name + '<br>';
-      }
-      return div;
-    };
-    legend.addTo(map);
-  });
+  var legend=L.control({position:'bottomright'});
+  legend.onAdd=function(){
+    var div=L.DomUtil.create('div','legend');
+    for(var name in districtColors){
+      div.innerHTML+='<span style="background:'+districtColors[name]+'"></span>'+name+'<br>';
+    }
+    return div;
+  };
+  legend.addTo(map);
+});
 </script>
 </body>
 </html>
